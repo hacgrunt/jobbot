@@ -131,6 +131,40 @@ EXCLUDED_TYPES = [
     "contractor",
 ]
 
+# Staffing agencies and recruiters - these are never direct-hire quality roles
+EXCLUDED_COMPANIES = [
+    "creative circle",
+    "robert half",
+    "robert half international",
+    "kforce",
+    "teksystems",
+    "tek systems",
+    "hays",
+    "randstad",
+    "adecco",
+    "manpower",
+    "manpowergroup",
+    "kelly services",
+    "insight global",
+    "aston carter",
+    "beacon hill",
+    "staffing",
+    "recruiting agency",
+    "talent solutions",
+    "hired",
+    "toptal",
+    "aquent",
+    "onward search",
+    "24 seven",
+    "mondo",
+    "vitamin t",
+    "the creative group",
+    "cella",
+    "yoh",
+    "allegis",
+    "spherion",
+]
+
 # Minimum salary threshold (lenient since roles negotiate up)
 MIN_SALARY = 140_000
 

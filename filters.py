@@ -14,6 +14,7 @@ from config import (
     ACCEPTED_LOCATIONS,
     EXCLUDED_LEVELS,
     EXCLUDED_TYPES,
+    EXCLUDED_COMPANIES,
     MIN_SALARY,
     TITLE_KEYWORDS,
     INDUSTRY_KEYWORDS,
@@ -70,11 +71,29 @@ def _check_level(job: dict) -> bool:
 def _check_employment_type(job: dict) -> bool:
     """Return True if job is full-time (not contract/freelance)."""
     title = job.get("title", "").lower()
-    desc_start = job.get("description", "")[:300].lower()
+    desc = job.get("description", "")[:1500].lower()
+
     for excl in EXCLUDED_TYPES:
         if excl in title:
             return False
-        if excl in desc_start and "full" not in desc_start:
+
+    # Check description more thoroughly - look for contract/freelance signals
+    # but don't be fooled by "full-funnel" containing "full"
+    for excl in EXCLUDED_TYPES:
+        if excl in desc:
+            # Only allow if "full-time" or "full time" explicitly appears
+            has_fulltime = "full-time" in desc or "full time" in desc
+            if not has_fulltime:
+                return False
+
+    return True
+
+
+def _check_company_blacklist(job: dict) -> bool:
+    """Return True if company is NOT a staffing agency or blacklisted."""
+    company = job.get("company", "").lower()
+    for excl in EXCLUDED_COMPANIES:
+        if excl in company:
             return False
     return True
 
@@ -227,6 +246,7 @@ def filter_jobs(jobs: list[dict]) -> list[dict]:
     # Step 3: Apply filters
     filters = [
         ("has_company", _check_has_company),
+        ("company_blacklist", _check_company_blacklist),
         ("location", _check_location),
         ("level", _check_level),
         ("employment_type", _check_employment_type),
