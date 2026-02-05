@@ -136,11 +136,16 @@ def _check_relevance(job: dict) -> bool:
     if has_strong_industry or has_ai_industry:
         return True
 
-    # Last resort: check if the job description has VERY strong crypto signals
-    # (multiple keywords, not just one vague mention)
-    desc = job.get("description", "")[:2000].lower()
+    # Last resort: only pass if description has overwhelming crypto signals
+    # (5+ distinct keywords AND crypto appears in first 300 chars)
+    desc = job.get("description", "")[:3000].lower()
+    desc_start = desc[:300]
     crypto_count = sum(1 for kw in STRONG_INDUSTRY_KEYWORDS if kw in desc)
-    if crypto_count >= 3:
+    crypto_in_opening = any(
+        kw in desc_start
+        for kw in ["crypto", "blockchain", "web3", "defi", "digital assets"]
+    )
+    if crypto_count >= 5 and crypto_in_opening:
         return True
 
     return False
