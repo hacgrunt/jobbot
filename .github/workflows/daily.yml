@@ -1,0 +1,45 @@
+name: JobBot Daily Digest
+
+on:
+  # Run at 6:15 AM PST (14:15 UTC) every day
+  # GitHub Actions cron can have up to 15-30 min delay, so we start early
+  schedule:
+    - cron: "15 14 * * *"
+
+  # Allow manual trigger from GitHub Actions UI
+  workflow_dispatch:
+
+jobs:
+  run-jobbot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run JobBot
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GMAIL_ADDRESS: ${{ secrets.GMAIL_ADDRESS }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          RECIPIENT_EMAIL: ${{ secrets.RECIPIENT_EMAIL }}
+        run: python main.py
+
+      # Persist the SQLite DB so we don't re-email jobs
+      - name: Cache job database
+        uses: actions/cache@v4
+        with:
+          path: jobbot.db
+          key: jobbot-db-${{ github.run_id }}
+          restore-keys: |
+            jobbot-db-
