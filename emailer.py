@@ -17,9 +17,15 @@ from config import (
     EMAIL_SUBJECT_PREFIX,
     SMTP_SERVER,
     SMTP_PORT,
+    GREENHOUSE_BOARDS,
+    LEVER_BOARDS,
+    ASHBY_BOARDS,
 )
 
 logger = logging.getLogger(__name__)
+
+# Number of company career pages we scan
+ATS_COMPANY_COUNT = len(GREENHOUSE_BOARDS) + len(LEVER_BOARDS) + len(ASHBY_BOARDS)
 
 
 def _group_by_category(jobs: list[dict]) -> dict[str, list[dict]]:
@@ -39,7 +45,6 @@ def _group_by_category(jobs: list[dict]) -> dict[str, list[dict]]:
         else:
             groups["other_marketing_crypto"].append(job)
 
-    # Sort each group by score descending
     for cat in groups:
         groups[cat].sort(key=lambda j: j.get("score", 0), reverse=True)
 
@@ -67,10 +72,16 @@ def _render_job_card(job: dict) -> str:
     company = escape(job.get("company", "Unknown"))
     location = escape(job.get("location", ""))
     salary = escape(job.get("salary", ""))
-    source = escape(job.get("source", ""))
     url = job.get("url", "#")
     score = job.get("score", 0)
+    summary = escape(job.get("summary", ""))
     reason = escape(job.get("reason", ""))
+
+    # Use summary if available, otherwise reason, otherwise nothing
+    description_line = summary or reason
+    # Don't show fallback noise
+    if description_line and "unavailable" in description_line.lower():
+        description_line = ""
 
     salary_badge = ""
     if salary:
@@ -87,12 +98,11 @@ def _render_job_card(job: dict) -> str:
             </div>
             <span style="background:{score_color};color:white;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;white-space:nowrap;">{score}/10</span>
         </div>
-        <div style="margin-top:6px;color:#555;font-size:14px;">
-            <strong>{company}</strong>
-            {(' · ' + location) if location else ''}
-            {(' · ' + source) if source else ''}
+        <div style="margin-top:6px;color:#333;font-size:14px;">
+            <strong style="font-size:15px;">{company}</strong>
+            {(' &middot; ' + location) if location else ''}
         </div>
-        {f'<div style="margin-top:6px;color:#888;font-size:12px;font-style:italic;">{reason}</div>' if reason else ''}
+        {f'<div style="margin-top:8px;color:#555;font-size:13px;line-height:1.4;">{description_line}</div>' if description_line else ''}
     </div>
     """
 
@@ -103,7 +113,6 @@ def _render_section(category: str, jobs: list[dict]) -> str:
         return ""
 
     header, subtitle = SECTION_HEADERS.get(category, (category, ""))
-
     cards = "\n".join(_render_job_card(job) for job in jobs)
 
     return f"""
@@ -121,21 +130,18 @@ def build_email_html(jobs: list[dict]) -> str:
     """Build the full HTML email body."""
     groups = _group_by_category(jobs)
     today = datetime.now().strftime("%A, %B %d, %Y")
-
     total = sum(len(g) for g in groups.values())
 
     sections = ""
     for category in ["top_pick", "pmm_crypto", "pmm_ai", "other_marketing_crypto", "top_company"]:
         sections += _render_section(category, groups[category])
 
-    # Summary counts
     summary_items = []
     for cat, cat_jobs in groups.items():
         if cat_jobs:
             header = SECTION_HEADERS[cat][0]
             summary_items.append(f"{len(cat_jobs)} {header}")
-
-    summary = " · ".join(summary_items)
+    summary = " &middot; ".join(summary_items)
 
     return f"""
     <!DOCTYPE html>
@@ -146,30 +152,26 @@ def build_email_html(jobs: list[dict]) -> str:
     </head>
     <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f5;margin:0;padding:20px;">
         <div style="max-width:680px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;">
-            <!-- Header -->
             <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);color:white;padding:24px 32px;">
                 <h1 style="margin:0;font-size:24px;">JobBot Daily Digest</h1>
                 <p style="margin:8px 0 0;color:#aaa;font-size:14px;">{today}</p>
             </div>
 
-            <!-- Summary Bar -->
             <div style="background:#f0f4ff;padding:12px 32px;border-bottom:1px solid #e0e0e0;">
                 <p style="margin:0;font-size:14px;color:#555;">
-                    <strong>{total} new roles</strong> found today · {summary}
+                    <strong>{total} new roles</strong> found today &middot; {summary}
                 </p>
             </div>
 
-            <!-- Content -->
             <div style="padding:24px 32px;">
                 {sections if sections else '<p style="color:#888;text-align:center;padding:40px 0;">No new matching jobs found today. All sources were checked.</p>'}
             </div>
 
-            <!-- Footer -->
             <div style="background:#f5f5f5;padding:16px 32px;border-top:1px solid #e0e0e0;">
                 <p style="margin:0;font-size:11px;color:#aaa;text-align:center;">
-                    JobBot scanned LinkedIn, Indeed, Glassdoor, ZipRecruiter, Google Jobs,
-                    Web3.career, CryptoJobsList, RemoteOK, and {len(groups)} company career pages.
-                    <br>Jobs older than 48 hours are excluded. Duplicates are filtered.
+                    Scanned LinkedIn, Indeed, Glassdoor, ZipRecruiter, Google Jobs,
+                    Web3.career, CryptoJobsList, RemoteOK, and {ATS_COMPANY_COUNT} company career pages.
+                    Duplicates filtered. Only verified links included.
                 </p>
             </div>
         </div>
@@ -182,7 +184,6 @@ def send_email(jobs: list[dict]):
     """Send the digest email via Gmail SMTP."""
     if not GMAIL_ADDRESS or not GMAIL_APP_PASSWORD:
         logger.error("Gmail credentials not set. Set GMAIL_ADDRESS and GMAIL_APP_PASSWORD.")
-        # Write email to file as fallback
         html = build_email_html(jobs)
         fallback_path = "/tmp/jobbot_email.html"
         with open(fallback_path, "w") as f:
@@ -199,7 +200,6 @@ def send_email(jobs: list[dict]):
     msg["From"] = GMAIL_ADDRESS
     msg["To"] = RECIPIENT_EMAIL
 
-    # Plain text version
     plain_lines = [f"JobBot Daily Digest - {today}", f"{total} new roles found\n"]
     for job in sorted(jobs, key=lambda j: j.get("score", 0), reverse=True):
         plain_lines.append(
@@ -207,7 +207,6 @@ def send_email(jobs: list[dict]):
         )
     plain_text = "\n".join(plain_lines)
 
-    # HTML version
     html = build_email_html(jobs)
 
     msg.attach(MIMEText(plain_text, "plain"))
@@ -221,7 +220,6 @@ def send_email(jobs: list[dict]):
         logger.info(f"Email sent to {RECIPIENT_EMAIL}: '{subject}'")
     except Exception as e:
         logger.error(f"Failed to send email: {e}")
-        # Fallback: save to file
         fallback_path = "/tmp/jobbot_email.html"
         with open(fallback_path, "w") as f:
             f.write(html)
