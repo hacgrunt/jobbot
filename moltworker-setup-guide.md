@@ -1,6 +1,7 @@
 # MoltWorker Setup Guide: OpenClaw on Cloudflare via Telegram
 
-Step-by-step instructions for a beginner. No Mac Mini, no VPS, no Docker needed.
+Step-by-step instructions for a beginner. No Mac Mini or VPS needed to run it,
+but you DO need Docker Desktop installed on your laptop for the build/deploy step.
 
 ## What You're Building
 
@@ -16,17 +17,19 @@ it does things for you.
 ## What You Need Before Starting
 
 - [ ] A computer with a terminal (Mac Terminal, Windows WSL, or Linux)
+- [ ] **Docker Desktop** installed and running (https://www.docker.com/products/docker-desktop/)
 - [ ] Node.js v18+ installed (`node --version` to check; install from https://nodejs.org)
 - [ ] Git installed (`git --version` to check)
 - [ ] A Cloudflare account (free to create at https://dash.cloudflare.com/sign-up)
 - [ ] An Anthropic API key (get one at https://console.anthropic.com)
 - [ ] Telegram installed on your phone
 
-**You do NOT need:** Docker, a VPS, a Mac Mini, or any always-on hardware.
-You run a few commands from your laptop to deploy, then everything runs on
-Cloudflare's servers. Your laptop can be off afterward — the agent stays live.
-Cloudflare Sandbox containers handle all the isolation/security that Docker
-would provide if you were self-hosting.
+**Why Docker?** When you run `npm run deploy`, Wrangler builds a Docker image
+locally from the Dockerfile (which packages OpenClaw + Node.js + dependencies)
+and pushes it to Cloudflare's container registry. After that, Cloudflare runs
+the container on their servers 24/7 — your laptop can be off. You don't need a
+VPS or Mac Mini running as a server, but you do need Docker on your dev machine
+for the initial build + any redeployments.
 
 ---
 
@@ -94,7 +97,18 @@ Without this, your agent forgets everything when it restarts.
 
 ## Phase 3: Clone and Deploy MoltWorker (15 minutes)
 
-Open your terminal.
+Open your terminal. **Make sure Docker Desktop is running** (open the app —
+you should see the whale icon in your menu bar / system tray).
+
+Verify Docker is working:
+
+```bash
+docker --version
+# Should show something like: Docker version 27.x.x
+```
+
+If not installed, get it from https://www.docker.com/products/docker-desktop/
+and restart your terminal after installing.
 
 ### 3a. Install Cloudflare's CLI (Wrangler)
 
@@ -169,14 +183,26 @@ npx wrangler secret put TELEGRAM_BOT_TOKEN
 
 ### 3e. Deploy
 
+Make sure Docker Desktop is running, then:
+
 ```bash
 npm run deploy
 ```
 
-This takes 1-2 minutes. When it finishes, it shows your Worker URL:
+This does two things:
+1. Builds the Docker image locally (packages OpenClaw + Node.js + skills)
+2. Pushes it to Cloudflare's container registry and deploys the Worker
+
+First deploy takes 3-5 minutes (downloads base images). Subsequent deploys
+are faster. When it finishes, it shows your Worker URL:
 `https://moltworker.<your-subdomain>.workers.dev`
 
 **Write down this URL.**
+
+If the deploy fails with a Docker error, make sure:
+- Docker Desktop is running (not just installed)
+- You have enough disk space (~2-3GB for the image)
+- On Mac: Docker has at least 4GB memory allocated (Docker Desktop → Settings → Resources)
 
 ---
 
