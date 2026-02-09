@@ -1,6 +1,6 @@
 # MoltWorker Setup Guide: OpenClaw on Cloudflare via Telegram
 
-Step-by-step instructions for a beginner. No Mac Mini needed.
+Step-by-step instructions for a beginner. No Mac Mini, no VPS, no Docker needed.
 
 ## What You're Building
 
@@ -21,6 +21,12 @@ it does things for you.
 - [ ] A Cloudflare account (free to create at https://dash.cloudflare.com/sign-up)
 - [ ] An Anthropic API key (get one at https://console.anthropic.com)
 - [ ] Telegram installed on your phone
+
+**You do NOT need:** Docker, a VPS, a Mac Mini, or any always-on hardware.
+You run a few commands from your laptop to deploy, then everything runs on
+Cloudflare's servers. Your laptop can be off afterward — the agent stays live.
+Cloudflare Sandbox containers handle all the isolation/security that Docker
+would provide if you were self-hosting.
 
 ---
 
