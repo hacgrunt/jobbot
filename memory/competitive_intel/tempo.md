@@ -62,10 +62,51 @@ Tempo is Stripe's bet that stablecoin payments = multi-trillion dollar market, a
 
 ---
 
+## JD Breakdown — Product Marketing Manager
+
+### Role Summary
+PMM shaping positioning across partners, supporting GTM, driving awareness among builders/partners/institutions. Blends technical depth with storytelling. Reports into marketing, works cross-functionally with product, eng, partnerships.
+
+### What They Actually Want (reading between the lines)
+
+**The job is 3 jobs:**
+1. **Enterprise/partner marketing** — decks, ROI models, fund flow diagrams, talking points that move enterprise deals. This is the revenue-driving work.
+2. **Developer marketing** — technically credible docs, dev-focused content, helping builders go live. This is the ecosystem-building work.
+3. **Growth/brand** — website, landing pages, digital surfaces, data-driven iteration. This is the awareness work.
+
+They're hiring ONE person to do all three because they're early. Expect this to be scrappy, high-volume, and cross-functional. You're not specializing — you're building the function.
+
+### JD Signals Worth Noting
+
+- **"ROI models, fund flows, diagrams"** — They need someone who can sell to CFOs and payment ops teams, not just write blog posts. Enterprise PMM muscle matters here.
+- **"Developer-focused documents which delve deep into our technical stack"** — They want someone who can credibly engage with eng. You need to speak Reth, EVM, tx types, not just hand-wave at "blockchain."
+- **"Own digital growth surfaces... use data to measure"** — Growth marketing is explicitly in scope. They want a PMM who thinks in conversion metrics, not just narrative.
+- **"Managing partner integrations and complex launches"** — Program management is called out. This role coordinates launch logistics across multiple partners going live.
+- **"Blockchain or fintech infrastructure companies"** — They want someone who's done this before in adjacent spaces. Crypto-native or fintech-native, ideally both.
+
+### Key Audience Segments (from JD)
+1. **Enterprise payment teams** evaluating integrations (banks, fintechs, platforms)
+2. **Developers** building on Tempo
+3. **Partners** going live (Klarna, Shopify, etc.)
+4. **Institutions** moving money on-chain
+
+### What to Emphasize in Screener
+- Experience translating technical products into enterprise narratives
+- Comfort with developer audiences (docs, technical content)
+- Data-driven approach to marketing (KPIs, measurement, iteration)
+- Program management for multi-stakeholder launches
+- Crypto/fintech infrastructure background
+- Ability to context-switch between audiences (dev docs → board deck → CT post)
+
+---
+
 ## Open Questions for Screener / Future Research
 - Decentralization story: Who runs validators? What's governance without a token?
 - Revenue model specifics: What cut of tx fees does Tempo take?
 - How does Tempo handle cross-chain interop? Stablecoins exist on 10+ chains.
 - What's the developer ecosystem strategy beyond EVM compat?
 - How do they position against L2s that could add payment lanes as a feature?
-- PMM role: First marketing hire. Building the function from scratch. Narrative bridging crypto-native ↔ enterprise audiences.
+- What does the marketing team look like today? Who does this role report to?
+- What's the mainnet launch timeline and how does PMM fit into launch sequencing?
+- Which partner integrations are closest to going live?
+- How do they think about crypto-native community vs. enterprise audience priority?
