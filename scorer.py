@@ -23,8 +23,9 @@ SCORING_PROMPT = """You are evaluating job postings for a specific candidate. He
 
 - Senior product marketing professional, 33, MBA
 - Primary target: Product Marketing Manager (PMM) roles in crypto/web3
-- Secondary target: PMM roles in AI/tech
-- Tertiary: Other marketing roles (growth, brand, content, comms) at top crypto companies
+- HIGH-PRIORITY secondary target: Roles at companies building agentic commerce, AI agent infrastructure, agent-to-agent payments, autonomous agent platforms, MCP/agent protocols. This includes crypto x AI intersections like onchain agents, agent wallets, etc.
+- Tertiary: PMM roles at established AI/tech companies
+- Also interested: Other marketing roles (growth, brand, content, comms) at top crypto or agentic companies
 - Location: NYC or Remote only
 - Seniority: Mid to Senior level (not junior/entry)
 - Values established, reputable companies with product-market fit
@@ -33,26 +34,27 @@ SCORING_PROMPT = """You are evaluating job postings for a specific candidate. He
 For each job below, evaluate and return a JSON array. Each element must have:
 - "index": the job's index number (as provided)
 - "score": overall relevance score 1-10
-- "category": exactly one of: "top_pick", "pmm_crypto", "pmm_ai", "other_marketing_crypto", "top_company"
-- "summary": one sentence like "Senior PMM role at leading DEX protocol" or "Growth marketing at unknown crypto startup — verify company"
+- "category": exactly one of: "top_pick", "pmm_crypto", "pmm_agentic", "pmm_ai", "other_marketing_crypto", "top_company"
+- "summary": one sentence like "Senior PMM role at leading DEX protocol" or "Growth marketing at AI agent payments startup"
 - "reason": one concise sentence explaining the score
 
 Scoring guidelines:
-- 9-10: Perfect match. Senior PMM at a respected crypto/web3 company. Would be excited to apply.
-- 7-8: Strong match. PMM or senior marketing at a solid crypto/AI company. Worth applying.
+- 9-10: Perfect match. Senior PMM at a respected crypto/web3 company OR at a leading agentic/AI-agent company. Would be excited to apply.
+- 7-8: Strong match. PMM or senior marketing at a solid crypto/agentic/AI company. Worth applying.
 - 6: Decent match. Marketing role at a relevant company, but may not be ideal title/level/industry.
 - 1-5: Poor match. Wrong industry, wrong level, or wrong function. Exclude.
 
 BE STRICT. Unknown or obscure companies should score lower (max 6) unless the role is exceptional.
 Companies like "Glint Tech Solutions", "Biz2Credit", or generic staffing agencies should score 1-3.
-Only established crypto/web3/AI companies or well-known tech companies should score 7+.
+Only established crypto/web3/AI/agentic companies or well-known tech companies should score 7+.
 
 Category definitions:
 - "top_pick": Score 8-10. Best matches across any industry.
 - "pmm_crypto": Score 6-7. Product marketing at a crypto/web3 company.
-- "pmm_ai": Score 6-7. Product marketing at an AI/tech company (not crypto).
+- "pmm_agentic": Score 6-7. Roles at companies focused on AI agents, agentic commerce, agent payments, agent infrastructure, agent protocols, or the crypto x AI agent intersection.
+- "pmm_ai": Score 6-7. Product marketing at a general AI/tech company (not crypto, not specifically agentic).
 - "other_marketing_crypto": Score 6-7. Non-PMM marketing (growth, brand, content, comms) at a crypto company.
-- "top_company": Any marketing role at one of these companies regardless of exact fit: Coinbase, Kraken, Uniswap, Hyperliquid, Anchorage, Fireblocks, Solana, ENS Labs, Circle, Tether, Aave, Consensys, Alchemy, Chainalysis, Phantom, Polygon, Arbitrum, Optimism, Paradigm, a16z.
+- "top_company": Any marketing role at one of these companies regardless of exact fit: Coinbase, Kraken, Uniswap, Hyperliquid, Anchorage, Fireblocks, Solana, ENS Labs, Circle, Tether, Aave, Consensys, Alchemy, Chainalysis, Phantom, Polygon, Arbitrum, Optimism, Paradigm, a16z, Anthropic, OpenAI, Stripe, Skyfire, Fetch.ai.
 
 IMPORTANT: Return ONLY a valid JSON array. No markdown fences, no explanation, just the raw JSON.
 
@@ -169,12 +171,16 @@ def _guess_category(job: dict) -> str:
     is_top_company = any(tc in company for tc in TOP_COMPANIES_SET)
     is_pmm = any(kw in title for kw in ["product marketing", "pmm"])
     crypto_keywords = ["crypto", "blockchain", "web3", "defi", "digital asset", "token", "nft", "dao"]
+    agentic_keywords = ["agentic", "ai agent", "agent commerce", "agent-to-agent", "autonomous agent", "multi-agent", "agent payment", "ai payment", "agent infrastructure"]
     ai_keywords = ["artificial intelligence", "machine learning", "llm", "generative ai"]
     is_crypto = any(kw in combined for kw in crypto_keywords)
+    is_agentic = any(kw in combined for kw in agentic_keywords)
     is_ai = any(kw in combined for kw in ai_keywords)
 
     if is_top_company:
         return "top_company"
+    if is_agentic:
+        return "pmm_agentic"
     if is_pmm and is_crypto:
         return "pmm_crypto"
     if is_pmm and is_ai:

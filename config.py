@@ -49,8 +49,9 @@ TITLE_KEYWORDS = [
     "community marketing",
 ]
 
-# ─── Industry Keywords (what makes it crypto/web3/AI) ───────────────
+# ─── Industry Keywords (what makes it crypto/web3/AI/agentic) ───────
 INDUSTRY_KEYWORDS = [
+    # Crypto / Web3
     "crypto",
     "cryptocurrency",
     "blockchain",
@@ -78,10 +79,32 @@ INDUSTRY_KEYWORDS = [
     "smart contract",
     "dapp",
     "dex",
-    "defi",
     "cefi",
     "wallet",
     "custody",
+    # Agentic / AI Payments / Agent Commerce
+    "agentic",
+    "ai agent",
+    "ai agents",
+    "agent commerce",
+    "agent-to-agent",
+    "a2a",
+    "agent payments",
+    "agent protocol",
+    "autonomous agent",
+    "multi-agent",
+    "multiagent",
+    "mcp",
+    "model context protocol",
+    "agent framework",
+    "agent infrastructure",
+    "agent orchestration",
+    "ai payments",
+    "machine-to-machine",
+    "m2m payments",
+    "programmable payments",
+    "payment rails",
+    # AI (broader, but filtered strictly)
     "artificial intelligence",
     "ai ",
     "llm",
@@ -344,6 +367,40 @@ TOP_COMPANIES = [
     "PayPal Crypto",
     "Block",
     "Stripe Crypto",
+    # --- Agentic / AI Agent Infrastructure ---
+    "Anthropic",
+    "OpenAI",
+    "LangChain",
+    "LangSmith",
+    "CrewAI",
+    "Fixie",
+    "AutoGPT",
+    "Imbue",
+    "Adept",
+    "Sierra",
+    "Lindy AI",
+    "Lindy",
+    "Relevance AI",
+    "Wordware",
+    "Letta",
+    "E2B",
+    "Skyfire",
+    "Nevermined",
+    "Fetch.ai",
+    "Autonolas",
+    "OLAS",
+    "Morpheus",
+    "SingularityNET",
+    "Virtuals Protocol",
+    "Virtuals",
+    "NEAR AI",
+    "Coinbase Developer Platform",
+    "Stripe",
+    "PayPal",
+    "Plaid",
+    "Sardine",
+    "Bridge",
+    "Mesh",
 ]
 
 # Normalized set for fast lookup (lowercase)
@@ -416,6 +473,7 @@ ASHBY_BOARDS = {
 # Each query is a (search_term, site_name_filter) pair.
 # We run multiple queries to maximize coverage.
 JOBSPY_QUERIES = [
+    # Crypto / Web3
     "product marketing crypto",
     "product marketing blockchain",
     "product marketing web3",
@@ -431,12 +489,22 @@ JOBSPY_QUERIES = [
     "PMM crypto",
     "PMM blockchain",
     "PMM web3",
-    "product marketing AI",
-    "product marketing artificial intelligence",
     "marketing lead crypto",
     "marketing lead web3",
     "marketing director crypto",
     "marketing director blockchain",
+    # Agentic / AI Payments
+    "product marketing agentic",
+    "product marketing AI agents",
+    "product marketing AI payments",
+    "marketing manager AI agents",
+    "PMM agentic",
+    "marketing agentic commerce",
+    "marketing agent infrastructure",
+    "product marketing autonomous agents",
+    # AI (general)
+    "product marketing AI",
+    "product marketing artificial intelligence",
 ]
 
 # ─── Email Settings ─────────────────────────────────────────────────

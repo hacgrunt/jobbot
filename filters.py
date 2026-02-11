@@ -32,7 +32,17 @@ STRONG_INDUSTRY_KEYWORDS = [
     "ethereum", "solana", "bitcoin",
 ]
 
-# AI/tech keywords
+# Agentic / AI agent keywords (strong signal — same weight as crypto)
+AGENTIC_KEYWORDS = [
+    "agentic", "ai agent", "ai agents", "agent commerce",
+    "agent-to-agent", "a2a", "autonomous agent", "multi-agent",
+    "multiagent", "agent infrastructure", "agent orchestration",
+    "agent protocol", "agent payments", "ai payments",
+    "machine-to-machine", "m2m", "mcp", "model context protocol",
+    "programmable payments",
+]
+
+# AI/tech keywords (weaker signal — need to be in title/company, not just description)
 AI_KEYWORDS = [
     "artificial intelligence", " ai ", "machine learning", "llm",
     "generative ai", "deep learning",
@@ -145,14 +155,15 @@ def _check_relevance(job: dict) -> bool:
     if any(cs in source for cs in crypto_sources):
         return True
 
-    # For JobSpy results: require crypto/AI keyword in title OR company name (not just description)
+    # For JobSpy results: require crypto/agentic/AI keyword in title OR company name
     # This prevents random companies like "Biz2Credit" from passing just because
     # the description mentions "digital" somewhere
     title_and_company = f"{title} {company}"
     has_strong_industry = any(kw in title_and_company for kw in STRONG_INDUSTRY_KEYWORDS)
+    has_agentic = any(kw in title_and_company for kw in AGENTIC_KEYWORDS)
     has_ai_industry = any(kw in title_and_company for kw in AI_KEYWORDS)
 
-    if has_strong_industry or has_ai_industry:
+    if has_strong_industry or has_agentic or has_ai_industry:
         return True
 
     # Last resort: only pass if description has overwhelming crypto signals
