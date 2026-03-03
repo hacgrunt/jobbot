@@ -16,6 +16,7 @@ from config import (
     MIN_RELEVANCE_SCORE,
     TOP_COMPANIES_SET,
 )
+from db import get_recent_feedback
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +70,25 @@ Here are the jobs to evaluate:
 """
 
 
+def _build_feedback_context() -> str:
+    """Build a prompt section from recent user feedback to calibrate scoring."""
+    feedback = get_recent_feedback(limit=30)
+    if not feedback:
+        return ""
+
+    lines = []
+    for fb in feedback:
+        lines.append(f'- "{fb["title"]}" at {fb["company"]} — flagged: {fb["reason"]}')
+
+    return (
+        "\n\nUSER FEEDBACK — The user has flagged the following jobs as bad matches. "
+        "Use these as negative examples to calibrate your scoring. If you see similar "
+        "jobs (same company, same pattern the user objected to), score them lower.\n"
+        + "\n".join(lines)
+        + "\n\n"
+    )
+
+
 def _build_job_summary(idx: int, job: dict) -> str:
     """Build a concise summary of a job for the scoring prompt."""
     desc = job.get("description", "")
@@ -107,7 +127,8 @@ def score_jobs(jobs: list[dict]) -> list[dict]:
         summaries = "\n".join(
             _build_job_summary(i, job) for i, job in enumerate(batch)
         )
-        prompt = SCORING_PROMPT + summaries
+        feedback_context = _build_feedback_context()
+        prompt = SCORING_PROMPT + feedback_context + summaries
 
         try:
             response = client.messages.create(

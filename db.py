@@ -45,6 +45,17 @@ def _connect():
         CREATE INDEX IF NOT EXISTS idx_dashboard_category
         ON dashboard_jobs(category)
     """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS user_feedback (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            job_key TEXT NOT NULL,
+            title TEXT,
+            company TEXT,
+            action TEXT DEFAULT 'flag',
+            reason TEXT DEFAULT '',
+            created_at TEXT DEFAULT (datetime('now'))
+        )
+    """)
     conn.commit()
     return conn
 
@@ -177,3 +188,44 @@ def get_dashboard_stats() -> dict:
         "last_refresh": last_refresh,
         "categories": categories,
     }
+
+
+# ─── User Feedback ───────────────────────────────────────────────
+
+
+def save_feedback(job_key: str, title: str, company: str, reason: str):
+    """Save user feedback (flag) for a job."""
+    conn = _connect()
+    conn.execute(
+        """INSERT INTO user_feedback (job_key, title, company, reason)
+           VALUES (?, ?, ?, ?)""",
+        (job_key, title, company, reason),
+    )
+    conn.commit()
+    conn.close()
+
+
+def get_recent_feedback(limit: int = 50) -> list[dict]:
+    """Get recent user feedback for injection into scoring prompt."""
+    conn = _connect()
+    conn.row_factory = sqlite3.Row
+    rows = conn.execute(
+        """SELECT title, company, reason, created_at
+           FROM user_feedback
+           ORDER BY created_at DESC
+           LIMIT ?""",
+        (limit,),
+    ).fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+
+def get_flagged_job_keys() -> set[str]:
+    """Get all job_keys the user has flagged."""
+    conn = _connect()
+    keys = {
+        row[0]
+        for row in conn.execute("SELECT DISTINCT job_key FROM user_feedback").fetchall()
+    }
+    conn.close()
+    return keys

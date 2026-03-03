@@ -27,6 +27,8 @@ from db import (
     filter_unseen,
     mark_seen,
     cleanup_old,
+    save_feedback,
+    get_flagged_job_keys,
 )
 from filters import make_job_key
 
@@ -112,17 +114,6 @@ def index():
     return DASHBOARD_HTML
 
 
-@app.route("/api/jobs")
-def api_jobs():
-    """Get jobs filtered by time window and category."""
-    hours = request.args.get("hours", type=int)
-    category = request.args.get("category", "all")
-    jobs = get_dashboard_jobs(hours=hours, category=category)
-    # Strip description from API response (too large, not needed for cards)
-    for j in jobs:
-        j.pop("description", None)
-    return jsonify({"jobs": jobs, "count": len(jobs)})
-
 
 @app.route("/api/stats")
 def api_stats():
@@ -143,6 +134,35 @@ def api_refresh():
     thread = threading.Thread(target=refresh_jobs, daemon=True)
     thread.start()
     return jsonify({"status": "started"})
+
+
+@app.route("/api/feedback", methods=["POST"])
+def api_feedback():
+    """Save user feedback (flag) for a job."""
+    data = request.get_json()
+    if not data or not data.get("job_key"):
+        return jsonify({"status": "error", "message": "job_key required"}), 400
+
+    save_feedback(
+        job_key=data["job_key"],
+        title=data.get("title", ""),
+        company=data.get("company", ""),
+        reason=data.get("reason", "").strip(),
+    )
+    return jsonify({"status": "ok"})
+
+
+@app.route("/api/jobs")
+def api_jobs_with_flags():
+    """Get jobs filtered by time window and category, with flag status."""
+    hours = request.args.get("hours", type=int)
+    category = request.args.get("category", "all")
+    jobs = get_dashboard_jobs(hours=hours, category=category)
+    flagged_keys = get_flagged_job_keys()
+    for j in jobs:
+        j.pop("description", None)
+        j["flagged"] = j["job_key"] in flagged_keys
+    return jsonify({"jobs": jobs, "count": len(jobs)})
 
 
 # ─── Dashboard HTML ────────────────────────────────────────────────
@@ -427,6 +447,90 @@ DASHBOARD_HTML = """<!DOCTYPE html>
     font-weight: 400;
   }
 
+  .flag-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .flag-btn:hover {
+    border-color: var(--red);
+    color: var(--red);
+  }
+  .flag-btn.flagged {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: var(--red);
+    color: var(--red);
+    cursor: default;
+  }
+
+  .flag-form {
+    display: none;
+    margin-top: 10px;
+    padding: 12px;
+    background: var(--bg);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+  .flag-form.open { display: block; }
+
+  .flag-presets {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+  .flag-preset {
+    background: var(--surface-hover);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .flag-preset:hover {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+
+  .flag-input-row {
+    display: flex;
+    gap: 8px;
+  }
+  .flag-input {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: inherit;
+  }
+  .flag-input::placeholder { color: var(--text-muted); }
+  .flag-input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .flag-submit {
+    background: var(--red);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .flag-submit:hover { opacity: 0.9; }
+
   @media (max-width: 640px) {
     .header { padding: 16px; }
     .main { padding: 16px 12px; }
@@ -532,6 +636,15 @@ function timeAgo(dateStr) {
   return days + "d ago";
 }
 
+const FLAG_PRESETS = [
+  "Bad company",
+  "Wrong role/seniority",
+  "Wrong industry",
+  "Score too high",
+  "Already applied",
+  "Not remote/NYC",
+];
+
 function renderJobCard(job) {
   const cat = job.category || "other_marketing_crypto";
   const salary = job.salary
@@ -543,12 +656,25 @@ function renderJobCard(job) {
     : "";
   const location = job.location || "Not specified";
   const fetched = timeAgo(job.fetched_at);
+  const jk = esc(job.job_key);
+  const flagged = job.flagged;
+
+  const flagBtn = flagged
+    ? `<button class="flag-btn flagged" disabled>Flagged</button>`
+    : `<button class="flag-btn" onclick="toggleFlagForm('${jk}')">Flag</button>`;
+
+  const presetBtns = FLAG_PRESETS.map(p =>
+    `<button class="flag-preset" onclick="submitFlag('${jk}', '${esc(job.title)}', '${esc(job.company)}', '${p}')">${p}</button>`
+  ).join("");
 
   return `
-    <div class="job-card">
+    <div class="job-card" id="card-${jk}">
       <div class="job-card-top">
         <a class="job-title" href="${esc(job.url)}" target="_blank" rel="noopener">${esc(job.title)}</a>
-        <span class="score-badge ${scoreClass(job.score)}">${job.score}/10</span>
+        <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
+          ${flagBtn}
+          <span class="score-badge ${scoreClass(job.score)}">${job.score}/10</span>
+        </div>
       </div>
       <div class="job-company">${esc(job.company)} ${salary}</div>
       <div class="job-meta">
@@ -558,6 +684,13 @@ function renderJobCard(job) {
       </div>
       ${summaryHtml}
       <span class="category-tag cat-${cat}">${CATEGORY_LABELS[cat] || cat}</span>
+      <div class="flag-form" id="flag-${jk}">
+        <div class="flag-presets">${presetBtns}</div>
+        <div class="flag-input-row">
+          <input class="flag-input" id="flag-input-${jk}" placeholder="Or type your own reason..." onkeydown="if(event.key==='Enter')submitFlagCustom('${jk}', '${esc(job.title)}', '${esc(job.company)}')">
+          <button class="flag-submit" onclick="submitFlagCustom('${jk}', '${esc(job.title)}', '${esc(job.company)}')">Submit</button>
+        </div>
+      </div>
     </div>
   `;
 }
@@ -699,6 +832,42 @@ async function triggerRefresh() {
     btn.textContent = "Refresh Jobs";
     btn.classList.remove("spinning");
   }
+}
+
+function toggleFlagForm(jobKey) {
+  const form = document.getElementById("flag-" + jobKey);
+  if (form) form.classList.toggle("open");
+}
+
+async function submitFlag(jobKey, title, company, reason) {
+  try {
+    await fetch("/api/feedback", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({job_key: jobKey, title, company, reason}),
+    });
+    // Update UI: close form, mark as flagged
+    const form = document.getElementById("flag-" + jobKey);
+    if (form) form.classList.remove("open");
+    const card = document.getElementById("card-" + jobKey);
+    if (card) {
+      const btn = card.querySelector(".flag-btn");
+      if (btn) {
+        btn.textContent = "Flagged";
+        btn.classList.add("flagged");
+        btn.disabled = true;
+      }
+    }
+  } catch (err) {
+    console.error("Flag failed:", err);
+  }
+}
+
+function submitFlagCustom(jobKey, title, company) {
+  const input = document.getElementById("flag-input-" + jobKey);
+  const reason = input ? input.value.trim() : "";
+  if (!reason) { input && input.focus(); return; }
+  submitFlag(jobKey, title, company, reason);
 }
 
 // Initial load
