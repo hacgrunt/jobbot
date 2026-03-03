@@ -60,7 +60,7 @@ Category definitions:
 - "pmm_payments": Score 6-7. Roles at payments/stablecoins/fintech companies working on blockchain rails, crypto payments, stablecoin infrastructure, or the convergence of traditional payments and crypto.
 - "pmm_ai": Score 6-7. Product marketing at a general AI/tech company (not crypto, not specifically agentic).
 - "other_marketing_crypto": Score 6-7. Non-PMM marketing (growth, brand, content, comms) at a crypto company.
-- "top_company": Any marketing role at one of these companies regardless of exact fit: Coinbase, Kraken, Uniswap, Hyperliquid, Anchorage, Fireblocks, Solana, ENS Labs, Circle, Tether, Aave, Consensys, Alchemy, Chainalysis, Phantom, Polygon, Arbitrum, Optimism, Paradigm, a16z, Anthropic, OpenAI, Stripe, Visa, Mastercard, Skyfire, Fetch.ai.
+- "top_company": Any marketing role at one of these companies regardless of exact fit: Coinbase, Kraken, Uniswap, Hyperliquid, Anchorage, Fireblocks, Solana, ENS Labs, Circle, Tether, Aave, Morpho, Ethena, Pendle, EigenLayer, Consensys, Alchemy, Chainalysis, Phantom, Polygon, Arbitrum, Optimism, Base, Monad, Sui, Paradigm, a16z, Anthropic, OpenAI, Stripe, Visa, Mastercard, Plaid, Skyfire, Fetch.ai, Wormhole, LayerZero, MoonPay, Nuvei, BVNK, PayPal, Sierra, Perplexity.
 
 IMPORTANT: Return ONLY a valid JSON array. No markdown fences, no explanation, just the raw JSON.
 
