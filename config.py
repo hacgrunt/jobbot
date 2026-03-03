@@ -482,6 +482,18 @@ TOP_COMPANIES = [
     "Stables",
     "Sphere",
     "Sequence",
+    "Lightspark",
+    "Thunes",
+    "Turnkey",
+    "Crossmint",
+    "RedotPay",
+    "Figure",
+    "Cross River",
+    "Cross River Bank",
+    "Catena Labs",
+    "Stellar",
+    "Stellar Development Foundation",
+    "Deel",
     # --- Agentic / AI Agent Infrastructure ---
     "Anthropic",
     "OpenAI",
@@ -564,6 +576,11 @@ GREENHOUSE_BOARDS = {
     "Animoca Brands": "animocabrands",
     "Lido": "lido",
     "Galxe": "galxe",
+    "Zero Hash": "zerohash",
+    "Stellar": "stellar",
+    "Thunes": "thunes",
+    "Lightspark": "lightspark",
+    "Figure": "figure",
 }
 
 # Lever: api.lever.co/v0/postings/{slug}
@@ -593,6 +610,11 @@ LEVER_BOARDS = {
     "BVNK": "bvnk",
     "Airwallex": "airwallex",
     "Conduit": "conduit",
+    "Rain": "rain",
+    "Crossmint": "crossmint",
+    "Deel": "deel",
+    "Mesh": "meshconnect",
+    "Turnkey": "turnkey",
 }
 
 # Ashby: api.ashby.io/posting-api/job-board/{slug}
