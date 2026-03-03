@@ -524,6 +524,13 @@ TOP_COMPANIES = [
     "Ramp AI",
     "Coinbase Developer Platform",
     "commercetools",
+    "MultiOn",
+    "Eliza Labs",
+    "ElizaOS",
+    "Openfort",
+    "Runlayer",
+    "Harvey",
+    "Baseten",
 ]
 
 # Normalized set for fast lookup (lowercase)
