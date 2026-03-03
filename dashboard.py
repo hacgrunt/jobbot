@@ -92,7 +92,6 @@ def refresh_jobs():
 
         result = f"Refreshed: {len(raw_jobs)} fetched -> {len(filtered_jobs)} filtered -> {len(scored_jobs)} scored"
         logger.info(result)
-        _refresh_status["last_run"] = datetime.now().isoformat()
         _refresh_status["last_result"] = result
         return {"status": "ok", "message": result, "count": len(scored_jobs)}
 
@@ -102,6 +101,7 @@ def refresh_jobs():
         return {"status": "error", "message": str(e)}
 
     finally:
+        _refresh_status["last_run"] = datetime.now().isoformat()
         _refresh_status["running"] = False
 
 
@@ -551,6 +551,7 @@ DASHBOARD_HTML = """<!DOCTYPE html>
       <div class="header-meta">
         <span id="job-total"></span>
         <span id="last-refresh"></span>
+        <span id="last-result" style="font-size:11px;opacity:0.7;"></span>
       </div>
       <button class="refresh-btn" id="refresh-btn" onclick="triggerRefresh()">Refresh Jobs</button>
     </div>
@@ -788,6 +789,11 @@ async function loadStats() {
     document.getElementById("job-total").textContent = `${stats.total || 0} total jobs`;
     if (stats.last_refresh) {
       document.getElementById("last-refresh").textContent = `Last refresh: ${timeAgo(stats.last_refresh)}`;
+    }
+    if (stats.last_result) {
+      const el = document.getElementById("last-result");
+      el.textContent = stats.last_result;
+      el.style.color = stats.last_result.startsWith("Error") ? "var(--red)" : "var(--text-muted)";
     }
     // Update refresh button state
     const btn = document.getElementById("refresh-btn");
