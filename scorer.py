@@ -23,7 +23,8 @@ SCORING_PROMPT = """You are evaluating job postings for a specific candidate. He
 
 - Senior product marketing professional, 33, MBA
 - Primary target: Product Marketing Manager (PMM) roles in crypto/web3
-- HIGH-PRIORITY secondary target: Roles at companies building agentic commerce, AI agent infrastructure, agent-to-agent payments, autonomous agent platforms, MCP/agent protocols. This includes crypto x AI intersections like onchain agents, agent wallets, etc.
+- HIGH-PRIORITY secondary target: Roles at companies building agentic commerce, AI agent infrastructure, agent-to-agent payments, autonomous agent platforms, MCP/agent protocols. This includes crypto x AI intersections like onchain agents, agent wallets, etc. Note: "agentic" is distinct from general AI — it specifically means autonomous AI agents that take actions, make decisions, and transact independently.
+- IMPORTANT secondary target: Roles at companies in payments/stablecoins/fintech that are moving to blockchain rails. This includes companies like Stripe, Visa, Mastercard, PayPal, Circle, Paxos, Bridge, MoonPay, etc. working on crypto payments, stablecoin infrastructure, cross-border blockchain payments, or tokenized payment rails.
 - Tertiary: PMM roles at established AI/tech companies
 - Also interested: Other marketing roles (growth, brand, content, comms) at top crypto or agentic companies
 - Location: NYC or Remote only
@@ -31,30 +32,35 @@ SCORING_PROMPT = """You are evaluating job postings for a specific candidate. He
 - Values established, reputable companies with product-market fit
 - Minimum compensation: $170k+ (but unlisted salary is fine)
 
+COMPANY QUALITY THRESHOLD — This is critical:
+- Only surface roles at companies with legitimate backing, established history, or strong reputation.
+- YES: Major exchanges (Coinbase, Kraken, Gemini), top protocols (Uniswap, Aave, ENS, Morpho), infrastructure (Fireblocks, Alchemy, Chainlink), established payments companies (Stripe, Visa, Mastercard), well-funded startups with known investors (Hyperliquid, Monad), leading AI companies (Anthropic, OpenAI).
+- NO: Unknown 5-person startups, no-name companies, generic "blockchain solutions" firms, staffing agencies.
+- When in doubt about a company, score conservatively (max 5). The candidate wants quality over quantity.
+
 For each job below, evaluate and return a JSON array. Each element must have:
 - "index": the job's index number (as provided)
 - "score": overall relevance score 1-10
-- "category": exactly one of: "top_pick", "pmm_crypto", "pmm_agentic", "pmm_ai", "other_marketing_crypto", "top_company"
+- "category": exactly one of: "top_pick", "pmm_crypto", "pmm_agentic", "pmm_payments", "pmm_ai", "other_marketing_crypto", "top_company"
 - "summary": one sentence like "Senior PMM role at leading DEX protocol" or "Growth marketing at AI agent payments startup"
 - "reason": one concise sentence explaining the score
 
 Scoring guidelines:
-- 9-10: Perfect match. Senior PMM at a respected crypto/web3 company OR at a leading agentic/AI-agent company. Would be excited to apply.
-- 7-8: Strong match. PMM or senior marketing at a solid crypto/agentic/AI company. Worth applying.
+- 9-10: Perfect match. Senior PMM at a respected crypto/web3 company OR at a leading agentic/AI-agent company OR at a major payments company moving to blockchain. Would be excited to apply.
+- 7-8: Strong match. PMM or senior marketing at a solid crypto/agentic/payments/AI company with clear reputation. Worth applying.
 - 6: Decent match. Marketing role at a relevant company, but may not be ideal title/level/industry.
-- 1-5: Poor match. Wrong industry, wrong level, or wrong function. Exclude.
+- 1-5: Poor match. Wrong industry, wrong level, wrong function, OR unknown/low-quality company. Exclude.
 
-BE STRICT. Unknown or obscure companies should score lower (max 6) unless the role is exceptional.
-Companies like "Glint Tech Solutions", "Biz2Credit", or generic staffing agencies should score 1-3.
-Only established crypto/web3/AI/agentic companies or well-known tech companies should score 7+.
+BE STRICT about company quality. Unknown or obscure companies should score 1-5 regardless of how good the role title sounds. A "Senior PMM" at an unknown company is worse than a "Marketing Manager" at Coinbase.
 
 Category definitions:
 - "top_pick": Score 8-10. Best matches across any industry.
 - "pmm_crypto": Score 6-7. Product marketing at a crypto/web3 company.
-- "pmm_agentic": Score 6-7. Roles at companies focused on AI agents, agentic commerce, agent payments, agent infrastructure, agent protocols, or the crypto x AI agent intersection.
+- "pmm_agentic": Score 6-7. Roles at companies focused on AI agents, agentic commerce, agent payments, agent infrastructure, agent protocols, or the crypto x AI agent intersection. NOT general AI/ML roles.
+- "pmm_payments": Score 6-7. Roles at payments/stablecoins/fintech companies working on blockchain rails, crypto payments, stablecoin infrastructure, or the convergence of traditional payments and crypto.
 - "pmm_ai": Score 6-7. Product marketing at a general AI/tech company (not crypto, not specifically agentic).
 - "other_marketing_crypto": Score 6-7. Non-PMM marketing (growth, brand, content, comms) at a crypto company.
-- "top_company": Any marketing role at one of these companies regardless of exact fit: Coinbase, Kraken, Uniswap, Hyperliquid, Anchorage, Fireblocks, Solana, ENS Labs, Circle, Tether, Aave, Consensys, Alchemy, Chainalysis, Phantom, Polygon, Arbitrum, Optimism, Paradigm, a16z, Anthropic, OpenAI, Stripe, Skyfire, Fetch.ai.
+- "top_company": Any marketing role at one of these companies regardless of exact fit: Coinbase, Kraken, Uniswap, Hyperliquid, Anchorage, Fireblocks, Solana, ENS Labs, Circle, Tether, Aave, Consensys, Alchemy, Chainalysis, Phantom, Polygon, Arbitrum, Optimism, Paradigm, a16z, Anthropic, OpenAI, Stripe, Visa, Mastercard, Skyfire, Fetch.ai.
 
 IMPORTANT: Return ONLY a valid JSON array. No markdown fences, no explanation, just the raw JSON.
 
@@ -172,15 +178,19 @@ def _guess_category(job: dict) -> str:
     is_pmm = any(kw in title for kw in ["product marketing", "pmm"])
     crypto_keywords = ["crypto", "blockchain", "web3", "defi", "digital asset", "token", "nft", "dao"]
     agentic_keywords = ["agentic", "ai agent", "agent commerce", "agent-to-agent", "autonomous agent", "multi-agent", "agent payment", "ai payment", "agent infrastructure"]
+    payments_keywords = ["stablecoin", "payment rail", "crypto payment", "digital payment", "cross-border payment", "tokenized payment", "payment infrastructure"]
     ai_keywords = ["artificial intelligence", "machine learning", "llm", "generative ai"]
     is_crypto = any(kw in combined for kw in crypto_keywords)
     is_agentic = any(kw in combined for kw in agentic_keywords)
+    is_payments = any(kw in combined for kw in payments_keywords)
     is_ai = any(kw in combined for kw in ai_keywords)
 
     if is_top_company:
         return "top_company"
     if is_agentic:
         return "pmm_agentic"
+    if is_payments:
+        return "pmm_payments"
     if is_pmm and is_crypto:
         return "pmm_crypto"
     if is_pmm and is_ai:

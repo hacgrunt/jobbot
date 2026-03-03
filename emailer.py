@@ -34,6 +34,7 @@ def _group_by_category(jobs: list[dict]) -> dict[str, list[dict]]:
         "top_pick": [],
         "pmm_crypto": [],
         "pmm_agentic": [],
+        "pmm_payments": [],
         "pmm_ai": [],
         "other_marketing_crypto": [],
         "top_company": [],
@@ -58,6 +59,10 @@ SECTION_HEADERS = {
     "pmm_agentic": (
         "Agentic / AI Agents / Agent Commerce",
         "Roles at companies building AI agents, agent payments, agent infrastructure, and agent protocols",
+    ),
+    "pmm_payments": (
+        "Payments / Stablecoins / New Rails",
+        "Roles at payments and fintech companies moving to blockchain infrastructure",
     ),
     "pmm_ai": ("Product Marketing — AI/Tech", "PMM roles at AI and tech companies"),
     "other_marketing_crypto": (
@@ -138,7 +143,7 @@ def build_email_html(jobs: list[dict]) -> str:
     total = sum(len(g) for g in groups.values())
 
     sections = ""
-    for category in ["top_pick", "pmm_crypto", "pmm_agentic", "pmm_ai", "other_marketing_crypto", "top_company"]:
+    for category in ["top_pick", "pmm_crypto", "pmm_agentic", "pmm_payments", "pmm_ai", "other_marketing_crypto", "top_company"]:
         sections += _render_section(category, groups[category])
 
     summary_items = []

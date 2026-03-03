@@ -42,6 +42,14 @@ AGENTIC_KEYWORDS = [
     "programmable payments",
 ]
 
+# Payments / stablecoins / trad-to-blockchain keywords (strong signal)
+PAYMENTS_KEYWORDS = [
+    "stablecoin", "crypto payment", "digital payment",
+    "payment rail", "payment infrastructure", "cross-border payment",
+    "tokenized payment", "embedded finance", "open banking",
+    "real-time settlement", "blockchain payment",
+]
+
 # AI/tech keywords (weaker signal — need to be in title/company, not just description)
 AI_KEYWORDS = [
     "artificial intelligence", " ai ", "machine learning", "llm",
@@ -161,9 +169,10 @@ def _check_relevance(job: dict) -> bool:
     title_and_company = f"{title} {company}"
     has_strong_industry = any(kw in title_and_company for kw in STRONG_INDUSTRY_KEYWORDS)
     has_agentic = any(kw in title_and_company for kw in AGENTIC_KEYWORDS)
+    has_payments = any(kw in title_and_company for kw in PAYMENTS_KEYWORDS)
     has_ai_industry = any(kw in title_and_company for kw in AI_KEYWORDS)
 
-    if has_strong_industry or has_agentic or has_ai_industry:
+    if has_strong_industry or has_agentic or has_payments or has_ai_industry:
         return True
 
     # Last resort: only pass if description has overwhelming crypto signals

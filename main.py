@@ -18,7 +18,7 @@ from sources import fetch_all_jobs
 from filters import filter_jobs, verify_urls
 from scorer import score_jobs
 from emailer import send_email, build_email_html
-from db import filter_unseen, mark_seen, cleanup_old
+from db import filter_unseen, mark_seen, cleanup_old, save_dashboard_jobs
 
 logging.basicConfig(
     level=logging.INFO,
@@ -82,7 +82,10 @@ def run(dry_run: bool = False):
     else:
         send_email(scored_jobs)
 
-    # Step 7: Mark jobs as seen
+    # Step 7: Save to dashboard DB and mark as seen
+    if scored_jobs:
+        save_dashboard_jobs(scored_jobs)
+        logger.info(f"Saved {len(scored_jobs)} jobs to dashboard.")
     if scored_jobs and not dry_run:
         mark_seen(scored_jobs)
         logger.info(f"Marked {len(scored_jobs)} jobs as seen.")
