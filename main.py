@@ -15,7 +15,7 @@ import sys
 from datetime import datetime
 
 from sources import fetch_all_jobs
-from filters import filter_jobs, verify_urls
+from filters import filter_jobs
 from scorer import score_jobs
 from emailer import send_email, build_email_html
 from db import filter_unseen, mark_seen, cleanup_old, save_dashboard_jobs
@@ -46,7 +46,7 @@ def run(dry_run: bool = False):
         send_email([])
         return
 
-    # Step 2: Apply filters (location, level, type, salary, relevance keywords)
+    # Step 2: Filter (location, level, type, salary, relevance)
     logger.info("\n--- Step 2: Filtering jobs ---")
     filtered_jobs = filter_jobs(raw_jobs)
     logger.info(f"Jobs after filtering: {len(filtered_jobs)}")
@@ -56,22 +56,17 @@ def run(dry_run: bool = False):
     new_jobs = filter_unseen(filtered_jobs)
     logger.info(f"New (unseen) jobs: {len(new_jobs)}")
 
-    # Step 4: Verify job URLs are live
-    logger.info("\n--- Step 4: Verifying URLs ---")
-    verified_jobs = verify_urls(new_jobs)
-    logger.info(f"Jobs with valid URLs: {len(verified_jobs)}")
-
-    # Step 5: AI scoring and categorization
-    logger.info("\n--- Step 5: AI scoring ---")
-    if verified_jobs:
-        scored_jobs = score_jobs(verified_jobs)
+    # Step 4: AI scoring and categorization
+    logger.info("\n--- Step 4: AI scoring ---")
+    if new_jobs:
+        scored_jobs = score_jobs(new_jobs)
         logger.info(f"Jobs passing score threshold: {len(scored_jobs)}")
     else:
         scored_jobs = []
         logger.info("No new jobs to score.")
 
-    # Step 6: Send email
-    logger.info("\n--- Step 6: Sending email digest ---")
+    # Step 5: Send email
+    logger.info("\n--- Step 5: Sending email digest ---")
     if dry_run:
         html = build_email_html(scored_jobs)
         output_path = "/tmp/jobbot_preview.html"
@@ -82,7 +77,7 @@ def run(dry_run: bool = False):
     else:
         send_email(scored_jobs)
 
-    # Step 7: Save to dashboard DB and mark as seen
+    # Step 6: Save to dashboard DB and mark as seen
     if scored_jobs:
         save_dashboard_jobs(scored_jobs)
         logger.info(f"Saved {len(scored_jobs)} jobs to dashboard.")
@@ -90,12 +85,12 @@ def run(dry_run: bool = False):
         mark_seen(scored_jobs)
         logger.info(f"Marked {len(scored_jobs)} jobs as seen.")
 
-    # Step 8: Cleanup old records
+    # Step 7: Cleanup old records
     cleanup_old(days=30)
 
     elapsed = (datetime.now() - start).total_seconds()
     logger.info(f"\nJobBot finished in {elapsed:.1f}s")
-    logger.info(f"Summary: {len(raw_jobs)} fetched -> {len(filtered_jobs)} filtered -> {len(new_jobs)} new -> {len(verified_jobs)} verified -> {len(scored_jobs)} emailed")
+    logger.info(f"Summary: {len(raw_jobs)} fetched -> {len(filtered_jobs)} filtered -> {len(new_jobs)} new -> {len(scored_jobs)} scored/emailed")
 
 
 def test_email():
